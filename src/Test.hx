@@ -4,7 +4,7 @@ import haxegon.*;
 
 class Test 
 {
-
+	private var ball: Ball;
 	public var color: Int; 
 	public var lightness: Float = 1;
 	public var X_MID: Int = Gfx.screenwidthmid;
@@ -17,13 +17,24 @@ class Test
 	}
 	
 	function reset() {
-		
+		ball = new Ball(X_MID, Y_MID, 50, Col.WHITE);
 	}
 	
 	
 	function update() {
+		
+		
+		
+		
 		handleColor();
 		Globals.changeBackgroundColor();
+		ball.updateColor();
+		ball.draw();
+		if (Input.justpressed(Key.DOWN)) ball.shrink(0.04);
+		if (Input.justpressed(Key.UP)) ball.blend(0.04);
+		if (Input.justpressed(Key.RIGHT)) Gfx.clearscreen(Col.BLUE);
+
+		
 		
 		Text.size = 4;
 		Text.align(Text.CENTER);

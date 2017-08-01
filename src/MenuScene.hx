@@ -14,17 +14,19 @@ class MenuScene
 	private var _txtPlayX: Float;
 	private var _txtPlayY: Float;
 
-	private var _DOT_INITIAL_X: Float = 30;
+	private var _DOT_INITIAL_X: Float = 40;
 	private var _DOT_INITIAL_Y: Float = Gfx.screenheightmid;
 	private var _DOT_SATURATION: Float = 0.8;
 	private var _DOT_LIGHTNESS: Float = 0.8;
 	private var _DOT_SIZE: Float = 10;
 	private var _DOT_SPEED: Float = 10;
-	private var _DOT_ALPHA_SPEED: Float = 0.01;
+	private var _DOT_BLEND_SPEED: Float = 0.0025;
+	private var _DOT_SHRINK_SPEED: Float = 0.09;
+	
+	private var dot: Ball;
 	
 	private var _dotX: Float;
 	private var _dotY: Float;
-	private var _dotAlpha: Float;
 	
 	private var _START_GAME_KEYS: Array<Key> = [
 		Key.W,
@@ -49,7 +51,6 @@ class MenuScene
 	}
 	
 	function reset() {
-		Filter.reset();
 		initialize();
 	}
 	
@@ -61,15 +62,23 @@ class MenuScene
 		
 		_dotX = _DOT_INITIAL_X;
 		_dotY = _DOT_INITIAL_Y;
-		_dotAlpha = 1;
+		
+		dot = new Ball(_dotX, _dotY, _DOT_SIZE, Col.hsl(Core.time * 30, _DOT_SATURATION, _DOT_LIGHTNESS));
+		dot.blend(_DOT_BLEND_SPEED);
+		dot.shrink(_DOT_SHRINK_SPEED);
 	}
 	
 	function drawDot() {
-		_dotAlpha -= _DOT_ALPHA_SPEED;
-		if (_dotAlpha <= 0) {
-			_dotAlpha = 1;
+		dot.updateColor();
+		dot.draw();
+	
+		if (!dot.isBlending()) {
+			dot.setSaturation(Ball.INITIAL_SATURATION);
+			dot.setLightness(Ball.INITIAL_LIGHTNESS);
+			dot.blend(_DOT_BLEND_SPEED);
+			dot.size = _DOT_SIZE;
+			dot.shrink(_DOT_SHRINK_SPEED);
 		}
-		Gfx.fillcircle(_dotX, _dotY, _DOT_SIZE, Col.hsl(Core.time * 30, _DOT_SATURATION, _DOT_LIGHTNESS), _dotAlpha);
 	}
 	
 	function startGameSequence() {

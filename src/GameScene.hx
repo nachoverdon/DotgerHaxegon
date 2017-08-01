@@ -3,12 +3,12 @@ package;
 import haxegon.*;
 
 class GameScene {
-	private var DEBUG_MODE: Bool = true;
+	private var DEBUG_MODE: Bool = false;
 	
 	private var _TXT_RESTART: String = '[R]estart';
 	
 	//private var _PLAYER_MENU_DECREASE_SPEED: Float = 0.005;
-	private var _PLAYER_INITIAL_DECREASE_SPEED: Float = 0.02;
+	private var _PLAYER_INITIAL_DECREASE_SPEED: Float = 0.03;
 	private var _PLAYER_INITIAL_SIZE: Float = 50;
 	private var _PLAYER_INITIAL_SATURATION: Float = 0.5;
 	private var _PLAYER_MIN_SIZE: Float = 4;
@@ -28,7 +28,6 @@ class GameScene {
 	//private var _backgroundLightness: Float;
 
 	function new() {
-		Scene.change(MenuScene);
 		//setInitialValues();
 	}
 	
@@ -67,7 +66,7 @@ class GameScene {
 		// Restarts the game
 		// TODO: Make it that it actually restarts the game lol
 		if (Input.justpressed(Key.R)) {
-			Text.display(50, 50, "[R]estarting...");
+			// Text.display(50, 50, "[R]estarting...");
 			Scene.change(MenuScene);
 		}
 	}

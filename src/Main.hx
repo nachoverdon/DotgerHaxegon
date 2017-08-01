@@ -4,8 +4,10 @@ import haxegon.*;
 
 class Main 
 {
-	private var GAME_BY: String = "Game by Nacho 'bazoo' Verdon";
+	private var GAME_NAME: String = 'DOTGER';
+	private var GAME_BY: String = "A game by Nacho 'bazoo' Verdon";
 	private var TEXT_BLENDING_SPEED: Float = 0.01;
+	
 	private var isChangingScene: Bool = false;
 	private var showText: Bool = true;
 	private var bloom: Float = 0;
@@ -17,6 +19,7 @@ class Main
 	
 	public function new() 
 	{
+		Scene.change(MenuScene);
 		Core.delaycall(startBlending, 2);
 	}
 	
@@ -29,9 +32,12 @@ class Main
 	}
 	
 	function drawText() {
-		if (showText) {			
-			Text.display(Gfx.screenwidthmid, Gfx.screenheightmid, GAME_BY, color);
+		if (showText) {
+			var offset = 50;
+			Text.size = 4;
+			Text.display(Gfx.screenwidthmid, Gfx.screenheightmid - offset, GAME_NAME, color);
 			Text.size = 3;
+			Text.display(Gfx.screenwidthmid, Gfx.screenheightmid, GAME_BY, color);
 			Text.align(Text.CENTER);
 		}
 	}
