@@ -21,7 +21,7 @@
     <class path="src" />
     <class path="C:\HaxeToolkit\haxe\lib\openfl\5,1,5\externs\core\openfl" />
     <class path="C:\HaxeToolkit\haxe\lib\openfl\5,1,5\externs\extras" />
-    <class path="bin\html5\release\haxe" />
+    <class path="bin\html5\debug\haxe" />
   </classpaths>
   <!-- Build options -->
   <build>
@@ -30,7 +30,7 @@
     <option noInlineOnDebug="False" />
     <option mainClass="ApplicationMain" />
     <option enabledebug="False" />
-    <option additional="--macro openfl._internal.utils.ExtraParams.include()&#xA;--macro lime.Lib.extraParams()&#xA;--remap flash:openfl" />
+    <option additional="--macro openfl._internal.utils.ExtraParams.include()&#xA;--macro lime.Lib.extraParams()&#xA;--remap flash:openfl&#xA;-debug " />
   </build>
   <!-- haxelib libraries -->
   <haxelib>

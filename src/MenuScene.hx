@@ -16,8 +16,10 @@ class MenuScene
 	private var _HOW_TO: String = 'Arrows';
 	private	var _HINT_DELAY: Int = 6;
 	private var _HINT_OFFSET: Float = 25;
-	private var _SAT_LIG_MAX: Float = 0.05;
+	private var _HINT_OFFSET_EXTRA: Float = 10;
+	private var _HINT_OFFSET_EXTRA_SPEED: Float = 0.125;
 	private var _SAT_LIG_SPEED: Float = 0.005;
+	private var _offsetExtra: Float;
 	private var _sat: Float;
 	private var _lig: Float;
 	private var _showHint: Bool;
@@ -82,6 +84,7 @@ class MenuScene
 		_sat = 0;
 		_lig = 0;
 		_showHint = false;
+		_offsetExtra = 0;
 		_isSequenceRunnning = false;
 		_txtPlayX = _TXT_INITIAL_X;
 		_txtPlayY = _TXT_INITIAL_Y;
@@ -173,9 +176,15 @@ class MenuScene
 	}
 	
 	function displayHint() {
-		if (_sat >= _SAT_LIG_MAX && _lig >= _SAT_LIG_MAX) {
-			_sat = _SAT_LIG_MAX;
-			_lig = _SAT_LIG_MAX;
+		if (_offsetExtra >= _HINT_OFFSET_EXTRA) {
+			_offsetExtra = 0;
+		} else {
+			_offsetExtra += _HINT_OFFSET_EXTRA_SPEED;
+		}
+		
+		if (_sat >= Globals.UI_TEXT_SATURATION && _lig >= Globals.UI_TEXT_LIGHTNESS) {
+			_sat = Globals.UI_TEXT_SATURATION;
+			_lig = Globals.UI_TEXT_LIGHTNESS;
 		} else {
 			_sat += _SAT_LIG_SPEED;
 			_lig += _SAT_LIG_SPEED;
@@ -187,7 +196,7 @@ class MenuScene
 			Globals.backgroundLightness + _lig
 		);
 		
-		var offset = player.size + _HINT_OFFSET;
+		var offset = player.size + _HINT_OFFSET + _offsetExtra;
 				
 		Text.align(Text.CENTER);
 		
@@ -196,7 +205,7 @@ class MenuScene
 		
 		Text.rotation(90, Text.CENTER, Convert.toint(Text.CENTER / 2));
 		Text.display(Gfx.screenwidthmid + Convert.toint(Text.height('>') / 2), Gfx.screenheightmid + offset, '>', color);
-		
+
 		Text.rotation(0);
 		Text.display(Gfx.screenwidthmid - offset, Gfx.screenheightmid - Convert.toint(Text.height('<') / 2), '<', color);
 		Text.display(Gfx.screenwidthmid + offset, Gfx.screenheightmid - Convert.toint(Text.height('>') / 2), '>', color);

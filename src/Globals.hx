@@ -7,6 +7,8 @@ class Globals
 	static public var backgroundSaturation: Float = 0.3;
 	static public var backgroundLightness: Float = 0.3;
 	static public var backgroundChangeSpeed: Float = 35;
+	static public var UI_TEXT_SATURATION: Float = 0.1;
+	static public var UI_TEXT_LIGHTNESS: Float = 0.1;
 	
 	public function new() 
 	{

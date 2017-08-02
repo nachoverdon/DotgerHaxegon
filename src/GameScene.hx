@@ -28,6 +28,8 @@ class GameScene {
 	
 	//private var _backgroundSaturation: Float;
 	//private var _backgroundLightness: Float;
+	
+	private var _debris: Array<Debris>;
 
 	function new() {
 		//setInitialValues();
@@ -44,10 +46,11 @@ class GameScene {
 		//changeBackgroundColor();
 		checkInputs();
 		drawPlayer();
+		drawDebris();
 		debugGame();
 		if (!_isPlayerAlive) gameOver();
 	}
-	
+		
 	// Initializes all the necessary variables.
 	function initialize() {
 		_playerSize = _PLAYER_INITIAL_SIZE;
@@ -61,6 +64,7 @@ class GameScene {
 		
 		//_backgroundSaturation = Globals.backgroundSaturation;
 		//_backgroundLightness = Globals.backgroundLightness;
+		createDebris();
 	}
 	
 	function gameOver() {
@@ -68,7 +72,19 @@ class GameScene {
 		Text.size = 4;
 		Text.display(Gfx.screenwidthmid, Gfx.screenheightmid - 50, GAME_OVER);
 		Text.size = 3;
+
+		
 		Text.display(Gfx.screenwidthmid, Gfx.screenheightmid + 20, RESTART);
+		Text.align(Text.LEFT);
+		Text.display(Gfx.screenwidthmid - Math.floor(Text.width(RESTART) / 2) + Text.width('[') + 3, Gfx.screenheightmid + 20, 'R',
+			Col.hsl(
+				Core.time * Globals.backgroundChangeSpeed,
+				Globals.backgroundSaturation + Globals.UI_TEXT_SATURATION,
+				Globals.backgroundLightness + Globals.UI_TEXT_LIGHTNESS
+			)
+		);
+		
+		
 		// TODO: Show score
 	}
 	
@@ -77,7 +93,7 @@ class GameScene {
 		checkPlayerInputs();
 		
 		// Restarts the game
-		// TODO: Make it that it actually restarts the game lol
+		// TODO: R -> RESTART, M -> MENU
 		if (!_isPlayerAlive) {
 			if (Input.justpressed(Key.R)) {
 				// Text.display(50, 50, "[R]estarting...");
@@ -151,6 +167,30 @@ class GameScene {
 	function changePlayerColor() {		
 		// TODO: Handle saturation variation
 		_playerColor = Col.hsl(Core.time * Globals.backgroundChangeSpeed, _playerSaturation, 0.5);
+	}
+	
+	function createDebris() {
+		_debris = new Array<Debris>();
+		var directions = [0, 90, 180, 270];
+		for (index in 0...19) {
+			var dir = Random.pick(directions);
+			var size = Random.int(10, 20);
+			var x = Random.int(size, Gfx.screenwidth - size);
+			var y = Random.int(size, Gfx.screenheight - size);
+			var speed = Random.int(2, 6);
+			
+			if (dir == 0) _debris.push(new Debris(-size, y, size, speed, dir));
+			if (dir == 90) _debris.push(new Debris(x, -size, size, speed, dir));
+			if (dir == 180) _debris.push(new Debris(Gfx.screenwidth + size, y, size, speed, dir));
+			if (dir == 270) _debris.push(new Debris(x, Gfx.screenwidth + size, size, speed, dir));
+
+		}
+	}
+	
+	function drawDebris() {
+		for (debris in _debris) {
+			debris.draw();
+		}
 	}
 	
 	// Changes the background saturation and lightness with the arrows.
