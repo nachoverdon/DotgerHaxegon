@@ -19,7 +19,7 @@ class Main
 	
 	public function new() 
 	{
-		Scene.change(MenuScene);
+		//Scene.change(MenuScene);
 		Core.delaycall(startBlending, 2);
 	}
 	
@@ -35,10 +35,10 @@ class Main
 		if (showText) {
 			var offset = 50;
 			Text.size = 4;
+			Text.align(Text.CENTER);
 			Text.display(Gfx.screenwidthmid, Gfx.screenheightmid - offset, GAME_NAME, color);
 			Text.size = 3;
 			Text.display(Gfx.screenwidthmid, Gfx.screenheightmid, GAME_BY, color);
-			Text.align(Text.CENTER);
 		}
 	}
 	

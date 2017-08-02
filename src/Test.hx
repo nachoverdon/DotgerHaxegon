@@ -22,19 +22,14 @@ class Test
 	
 	
 	function update() {
-		
-		
-		
-		
 		handleColor();
 		Globals.changeBackgroundColor();
 		ball.updateColor();
 		ball.draw();
+
 		if (Input.justpressed(Key.DOWN)) ball.shrink(0.04);
 		if (Input.justpressed(Key.UP)) ball.blend(0.04);
 		if (Input.justpressed(Key.RIGHT)) Gfx.clearscreen(Col.BLUE);
-
-		
 		
 		Text.size = 4;
 		Text.align(Text.CENTER);

@@ -160,4 +160,12 @@ class Ball
 	public function isBlending() {
 		return _isBlending;
 	}
+	
+	public function stopShrink() {
+		_isShrinking = false;
+	}
+	
+	public function stopBlend() {
+		_isBlending = false;
+	}
 }

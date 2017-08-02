@@ -6,7 +6,7 @@ class Globals
 {
 	static public var backgroundSaturation: Float = 0.3;
 	static public var backgroundLightness: Float = 0.3;
-	static public var backgroundChangeSpeed: Float = 30;
+	static public var backgroundChangeSpeed: Float = 35;
 	
 	public function new() 
 	{

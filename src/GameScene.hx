@@ -5,10 +5,11 @@ import haxegon.*;
 class GameScene {
 	private var DEBUG_MODE: Bool = false;
 	
-	private var _TXT_RESTART: String = '[R]estart';
+	private var RESTART: String = '[R]estart';
+	private var GAME_OVER: String = 'GAME OVER';
 	
 	//private var _PLAYER_MENU_DECREASE_SPEED: Float = 0.005;
-	private var _PLAYER_INITIAL_DECREASE_SPEED: Float = 0.03;
+	private var _PLAYER_INITIAL_DECREASE_SPEED: Float = 0.05;
 	private var _PLAYER_INITIAL_SIZE: Float = 50;
 	private var _PLAYER_INITIAL_SATURATION: Float = 0.5;
 	private var _PLAYER_MIN_SIZE: Float = 4;
@@ -20,6 +21,7 @@ class GameScene {
 	private var _playerSaturation: Float;
 	private var _playerColor: Int;
 	private var _playerAlpha: Float;
+	private var _isPlayerAlive: Bool = true;
 	
 	private var _playerX: Float;
 	private var _playerY: Float;
@@ -43,6 +45,7 @@ class GameScene {
 		checkInputs();
 		drawPlayer();
 		debugGame();
+		if (!_isPlayerAlive) gameOver();
 	}
 	
 	// Initializes all the necessary variables.
@@ -50,24 +53,36 @@ class GameScene {
 		_playerSize = _PLAYER_INITIAL_SIZE;
 		_playerDecreaseSpeed = _PLAYER_INITIAL_DECREASE_SPEED;
 		_playerSaturation = 0.5;
-		_playerColor = Col.hsl(Core.time * 30, _playerSaturation, 0.5);
+		_playerColor = Col.hsl(Core.time * Globals.backgroundChangeSpeed, _playerSaturation, 0.5);
 		_playerAlpha = 1;
+		_isPlayerAlive = true;
 		_playerX = Gfx.screenwidthmid;
 		_playerY = Gfx.screenheightmid;
 		
 		//_backgroundSaturation = Globals.backgroundSaturation;
 		//_backgroundLightness = Globals.backgroundLightness;
 	}
-		
+	
+	function gameOver() {
+		Text.align(Text.CENTER);
+		Text.size = 4;
+		Text.display(Gfx.screenwidthmid, Gfx.screenheightmid - 50, GAME_OVER);
+		Text.size = 3;
+		Text.display(Gfx.screenwidthmid, Gfx.screenheightmid + 20, RESTART);
+		// TODO: Show score
+	}
+	
 	// Checks for all the inputs.
 	function checkInputs() {
 		checkPlayerInputs();
 		
 		// Restarts the game
 		// TODO: Make it that it actually restarts the game lol
-		if (Input.justpressed(Key.R)) {
-			// Text.display(50, 50, "[R]estarting...");
-			Scene.change(MenuScene);
+		if (!_isPlayerAlive) {
+			if (Input.justpressed(Key.R)) {
+				// Text.display(50, 50, "[R]estarting...");
+				Scene.change(MenuScene);
+			}
 		}
 	}
 	
@@ -75,7 +90,7 @@ class GameScene {
 	function decreasePlayerSizeBy(amount: Float) {
 		_playerSize -= amount;
 		
-		if (_playerSize < _PLAYER_MIN_SIZE) {
+		if (_playerSize < _PLAYER_MIN_SIZE && _isPlayerAlive) {
 			killPlayer();
 		}
 	}
@@ -85,6 +100,7 @@ class GameScene {
 		// TODO: Proper kill animation.
 		//	Ask if they want to restart and whatnot
 		_playerAlpha = 0;
+		_isPlayerAlive = false;
 	}
 	
 	//// Changes the color of the game's background.
@@ -95,16 +111,16 @@ class GameScene {
 	// Checks for input from the player and moves the ball around.
 	function checkPlayerInputs() {	
 		// Horizontal movement
-		if (Input.pressed(Key.LEFT)) {
+		if (Input.pressed(Key.LEFT) || Input.pressed(Key.A)) {
 			_playerX -= _PLAYER_SPEED_X;
-		} else if (Input.pressed(Key.RIGHT)) {
+		} else if (Input.pressed(Key.RIGHT) || Input.pressed(Key.D)) {
 			_playerX += _PLAYER_SPEED_X;
 		}
 		
 		// Vertical movement
-		if (Input.pressed(Key.UP)) {
+		if (Input.pressed(Key.UP) || Input.pressed(Key.W)) {
 			_playerY -= _PLAYER_SPEED_Y;
-		} else if (Input.pressed(Key.DOWN)) {
+		} else if (Input.pressed(Key.DOWN) || Input.pressed(Key.S)) {
 			_playerY += _PLAYER_SPEED_Y;
 		}
 		
@@ -134,7 +150,7 @@ class GameScene {
 	// Changes the color of the ball depending on state.
 	function changePlayerColor() {		
 		// TODO: Handle saturation variation
-		_playerColor = Col.hsl(Core.time * 30, _playerSaturation, 0.5);
+		_playerColor = Col.hsl(Core.time * Globals.backgroundChangeSpeed, _playerSaturation, 0.5);
 	}
 	
 	// Changes the background saturation and lightness with the arrows.
