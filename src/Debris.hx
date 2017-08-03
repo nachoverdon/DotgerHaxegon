@@ -13,6 +13,7 @@ class Debris
 	private var _angle: Float;
 	private var _color: Int;
 	private var _alpha: Float;
+	private var _isDead: Bool;
 	
 	
 	public function new(x: Float, y: Float, size: Float, speed: Float,
@@ -25,9 +26,26 @@ class Debris
 		_color = color;
 		_alpha = alpha;
 		
+		_isDead = false;
 		//updateColor();
 		updateAngle();
 		
+	}
+	
+	public function getX() {
+		return _x;
+	}
+	
+	public function getY() {
+		return _y;
+	}
+	
+	public function getSize() {
+		return _size;
+	}
+	
+	public function getDir() {
+		return _direction;
 	}
 	
 	private function updateAngle() {
@@ -48,6 +66,7 @@ class Debris
 	}
 	
 	public function draw() {
+		if (_isDead) return;
 		//shrinking();
 		//blending();
 		
@@ -58,6 +77,10 @@ class Debris
 		Gfx.linethickness = 2;
 		Gfx.drawhexagon(_x, _y, _size, _angle, _color, _alpha);
 
+	}
+	
+	public function kill() {
+		_isDead = true;
 	}
 	
 }

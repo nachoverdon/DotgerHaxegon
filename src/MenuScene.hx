@@ -27,7 +27,7 @@ class MenuScene
 	private var _TXT_PLAY: String = 'PLAY';
 	private var _TXT_INITIAL_X: Float = 50;
 	private var _TXT_INITIAL_Y: Float = Gfx.screenheightmid;
-	private var _TXT_SIZE: Float = 3;
+	private var _TXT_SIZE: Float = 2;
 	
 	private var _txtPlayDisplay: Bool;	
 	private var _txtPlayAlpha: Float;
@@ -67,7 +67,7 @@ class MenuScene
 	
 	function update() {
 		Globals.changeBackgroundColor();
-		displayPlayText();
+		//displayPlayText();
 		drawPlayer();
 		drawDot();
 		checkStartGame();
@@ -196,19 +196,24 @@ class MenuScene
 			Globals.backgroundLightness + _lig
 		);
 		
-		var offset = player.size + _HINT_OFFSET + _offsetExtra;
-				
+		var playerOffset = player.size + _HINT_OFFSET + _offsetExtra;
+		var dotOffset = _HINT_OFFSET + _offsetExtra;
+		var charSize = Convert.toint(Text.height('>') / 2);
+		
 		Text.align(Text.CENTER);
+		Text.size = _TXT_SIZE;
+		
+		Text.display(_TXT_INITIAL_X + dotOffset, Gfx.screenheightmid - charSize, '>', color);
 		
 		Text.rotation(90, Text.CENTER, Text.CENTER);		
-		Text.display(Gfx.screenwidthmid + Convert.toint(Text.height('<') / 2), Gfx.screenheightmid - offset, '<', color);
+		Text.display(Gfx.screenwidthmid + charSize, Gfx.screenheightmid - playerOffset, '<', color);
 		
 		Text.rotation(90, Text.CENTER, Convert.toint(Text.CENTER / 2));
-		Text.display(Gfx.screenwidthmid + Convert.toint(Text.height('>') / 2), Gfx.screenheightmid + offset, '>', color);
+		Text.display(Gfx.screenwidthmid + charSize, Gfx.screenheightmid + playerOffset, '>', color);
 
 		Text.rotation(0);
-		Text.display(Gfx.screenwidthmid - offset, Gfx.screenheightmid - Convert.toint(Text.height('<') / 2), '<', color);
-		Text.display(Gfx.screenwidthmid + offset, Gfx.screenheightmid - Convert.toint(Text.height('>') / 2), '>', color);
+		Text.display(Gfx.screenwidthmid - playerOffset, Gfx.screenheightmid - charSize, '<', color);
+		Text.display(Gfx.screenwidthmid + playerOffset, Gfx.screenheightmid - charSize, '>', color);
 	}
 	
 	

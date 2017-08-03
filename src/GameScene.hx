@@ -29,7 +29,10 @@ class GameScene {
 	//private var _backgroundSaturation: Float;
 	//private var _backgroundLightness: Float;
 	
-	private var _debris: Array<Debris>;
+	private var _DEBRIS_SPAWN_COOLDOWN: Float = 5;
+	private var _nextDebris: Float;
+	private var _debrisPool: Array<Debris>;
+	
 
 	function new() {
 		//setInitialValues();
@@ -62,8 +65,10 @@ class GameScene {
 		_playerX = Gfx.screenwidthmid;
 		_playerY = Gfx.screenheightmid;
 		
+		
 		//_backgroundSaturation = Globals.backgroundSaturation;
 		//_backgroundLightness = Globals.backgroundLightness;
+		_nextDebris = 0;
 		createDebris();
 	}
 	
@@ -90,7 +95,7 @@ class GameScene {
 	
 	// Checks for all the inputs.
 	function checkInputs() {
-		checkPlayerInputs();
+		if (_isPlayerAlive) checkPlayerInputs();
 		
 		// Restarts the game
 		// TODO: R -> RESTART, M -> MENU
@@ -104,10 +109,11 @@ class GameScene {
 	
 	// Decreases the size of the player by the given amount, but never below minimum.
 	function decreasePlayerSizeBy(amount: Float) {
-		_playerSize -= amount;
-		
-		if (_playerSize < _PLAYER_MIN_SIZE && _isPlayerAlive) {
+		if (_playerSize <= _PLAYER_MIN_SIZE && _isPlayerAlive) {
+			_playerSize = _PLAYER_MIN_SIZE;
 			killPlayer();
+		} else if (_isPlayerAlive) {
+			_playerSize -= amount;
 		}
 	}
 	
@@ -169,8 +175,12 @@ class GameScene {
 		_playerColor = Col.hsl(Core.time * Globals.backgroundChangeSpeed, _playerSaturation, 0.5);
 	}
 	
+	function spawnDebris() {
+		// TODO: Spawn debris every _DEBRIS_SPAWN_TIME
+	}
+	
 	function createDebris() {
-		_debris = new Array<Debris>();
+		_debrisPool = new Array<Debris>();
 		var directions = [0, 90, 180, 270];
 		for (index in 0...19) {
 			var dir = Random.pick(directions);
@@ -179,16 +189,82 @@ class GameScene {
 			var y = Random.int(size, Gfx.screenheight - size);
 			var speed = Random.int(2, 6);
 			
-			if (dir == 0) _debris.push(new Debris(-size, y, size, speed, dir));
-			if (dir == 90) _debris.push(new Debris(x, -size, size, speed, dir));
-			if (dir == 180) _debris.push(new Debris(Gfx.screenwidth + size, y, size, speed, dir));
-			if (dir == 270) _debris.push(new Debris(x, Gfx.screenwidth + size, size, speed, dir));
+			if (index == 0) dir = 180;
+			
+			if (dir == 0) _debrisPool.push(new Debris(-size, y, size, speed, dir));
+			else if (dir == 90) _debrisPool.push(new Debris(x, -size, size, speed, dir));
+			else if (dir == 180) _debrisPool.push(new Debris(Gfx.screenwidth + size, y, size, speed, dir));
+			else if (dir == 270) _debrisPool.push(new Debris(x, Gfx.screenwidth + size, size, speed, dir));
 
 		}
 	}
 	
+	function checkOutOfBounds(x: Float, y: Float) {
+		return x < 0 || x > Gfx.screenwidth || y < 0 || y > Gfx.screenheight;
+	}
+	
+	function isDebrisOutOfBounds(debris: Debris): Bool {
+		var dir = debris.getDir();
+		var isOutOfBounds = false;
+		
+		if (dir == 0) {
+			isOutOfBounds = checkOutOfBounds(debris.getX() + debris.getSize(), debris.getY());
+		} else if (dir == 90) {
+			isOutOfBounds = checkOutOfBounds(debris.getX(), debris.getY() + debris.getSize());
+		} else if (dir == 180) {		
+			isOutOfBounds = checkOutOfBounds(debris.getX() - debris.getSize(), debris.getY());
+		} else if (dir == 270) {			
+			isOutOfBounds = checkOutOfBounds(debris.getX(), debris.getY()  - debris.getSize());
+		}
+		
+		if (isOutOfBounds) _debrisPool.remove(debris);
+		
+		return isOutOfBounds;
+	}
+	
+	function checkCollisionDebrisPlayers(debris: Debris) {
+		// TODO: Fix debris collision offest...
+		if (!_isPlayerAlive) return;
+
+		var debrisHitbox = 1.5;
+		var playerHitbox = 1.5;
+		var playerSize = _playerSize * playerHitbox;
+		var debrisSize = debris.getSize() * debrisHitbox;
+		
+		var player = {
+			x: _playerX - playerSize / 2,
+			y: _playerY - playerSize / 2,
+			w: playerSize,
+			h: playerSize
+		};
+		var deb = {
+			x: debris.getX() - debrisSize / 2,
+			y: debris.getY() - debrisSize / 2,
+			w: debrisSize,
+			h: debrisSize
+		};
+		//Gfx.drawbox(player.x, player.y, player.w, player.h, Col.WHITE);
+		//Gfx.drawbox(deb.x, deb.y, deb.w, deb.h, Col.WHITE);
+		//Text.display(player.x, player.y, Convert.tostring(_playerSize));
+		
+		var isOverlaping = Geom.overlap(
+			player.x, player.y,
+			player.w, player.h,
+			deb.x, deb.y,
+			deb.w, deb.h
+		);
+		
+		if (isOverlaping) {
+			// playerHit();
+			debris.kill();
+			_debrisPool.remove(debris);
+		}
+	}
+	
 	function drawDebris() {
-		for (debris in _debris) {
+		for (debris in _debrisPool) {
+			if (isDebrisOutOfBounds(debris)) return;
+			checkCollisionDebrisPlayers(debris);
 			debris.draw();
 		}
 	}

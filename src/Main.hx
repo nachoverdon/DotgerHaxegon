@@ -19,7 +19,7 @@ class Main
 	
 	public function new() 
 	{
-		Scene.change(GameScene);
+		Scene.change(MenuScene);
 		Core.delaycall(startBlending, 2);
 	}
 	
