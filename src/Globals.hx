@@ -4,6 +4,10 @@ import haxegon.*;
 
 class Globals 
 {
+	static public var _MIN_SPEED: Int = 5;
+	static public var _MAX_SPEED: Int = 7;
+	static public var _MIN_SIZE: Int = 10;
+	static public var _MAX_SIZE: Int = 20;
 	static public var backgroundSaturation: Float = 0.3;
 	static public var backgroundLightness: Float = 0.3;
 	static public var backgroundChangeSpeed: Float = 35;

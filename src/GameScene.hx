@@ -16,6 +16,7 @@ class GameScene {
 	private var _PLAYER_SPEED_X: Int = 10;
 	private var _PLAYER_SPEED_Y: Int = 10;
 	//private var _PLAYER_HITBOX: Float = 1.0;
+	private var _DEBRIS_DAMAGE: Float = 4;
 
 	private var _playerSize: Float;
 	private var _playerDecreaseSpeed: Float;
@@ -27,10 +28,27 @@ class GameScene {
 	private var _playerX: Float;
 	private var _playerY: Float;
 	
+	private var _level: Int;
 	//private var _backgroundSaturation: Float;
 	//private var _backgroundLightness: Float;
+	private var _POWERUP_AMOUNTS: Array<Int> = [5, 10, 15, 20, 100];
+	private var _POWERUP_MAX_DEVIATION: Int = 20;
+	private var _POWERUP_INITIAL_COOLDOWN: Float = 200;
+	private var _POWERUP_SPAWN_COOLDOWN_REDUCTION: Float = 5;
+	private var _powerUpSpawnCooldown: Float;
+	private var _powerUpActualAmount: Int;
+	private var _nextPowerUp: Float;
+	private var _powerUpPool: Array<PowerUp>;
+	private var _spawnedPowerUpPool: Array<PowerUp>;
 	
-	private var _DEBRIS_SPAWN_COOLDOWN: Float = 60;
+	
+	private var _DEBRIS_AMOUNTS: Array<Int> = [50, 100, 150, 200, 500];
+	//private var _DEBRIS_AMOUNTS: Array<Int> = [10, 20, 30, 30, 30];
+	private var _DEBRIS_MAX_DEVIATION: Int = 20;
+	private var _DEBRIS_SPAWN_TUTORIAL: Float = 120;
+	private var _DEBRIS_INITIAL_COOLDOWN: Float = 45;
+	private var _debrisSpawnCooldown: Float;
+	private var _debrisActualAmount: Int;
 	private var _nextDebris: Float;
 	private var _debrisPool: Array<Debris>;
 	private var _spawnedDebrisPool: Array<Debris>;
@@ -52,8 +70,11 @@ class GameScene {
 		checkInputs();
 		drawPlayer();
 		spawnDebris();
+		spawnPowerUps();
 		drawDebris();
+		drawPowerUps();
 		debugGame();
+		showLevel();
 		if (!_isPlayerAlive) gameOver();
 	}
 		
@@ -68,13 +89,39 @@ class GameScene {
 		_playerX = Gfx.screenwidthmid;
 		_playerY = Gfx.screenheightmid;
 		
+		PowerUp._MIN_SIZE = PowerUp._INITIAL_MIN_SIZE;
+		PowerUp._MAX_SIZE = PowerUp._INITIAL_MAX_SIZE;
+		PowerUp._MIN_SPEED = PowerUp._INITIAL_MIN_SPEED;
+		PowerUp._MAX_SPEED = PowerUp._INITIAL_MAX_SPEED;
+		
+		_powerUpSpawnCooldown = _POWERUP_INITIAL_COOLDOWN;
+		_powerUpActualAmount = _POWERUP_AMOUNTS[_level];
+		_nextPowerUp = _POWERUP_INITIAL_COOLDOWN;
+		_powerUpPool = new Array<PowerUp>();
+		_spawnedPowerUpPool = new Array<PowerUp>();
 		
 		//_backgroundSaturation = Globals.backgroundSaturation;
 		//_backgroundLightness = Globals.backgroundLightness;
+		Debris._MIN_SIZE = Debris._INITIAL_MIN_SIZE;
+		Debris._MAX_SIZE = Debris._INITIAL_MAX_SIZE;
+		Debris._MIN_SPEED = Debris._INITIAL_MIN_SPEED;
+		Debris._MAX_SPEED = Debris._INITIAL_MAX_SPEED;
+		_debrisSpawnCooldown = _DEBRIS_INITIAL_COOLDOWN;
+		_level = 0;
+		_debrisActualAmount = _DEBRIS_AMOUNTS[_level];
 		_nextDebris = 0;
+		
 		_debrisPool = new Array<Debris>();
 		_spawnedDebrisPool = new Array<Debris>();
 		createDebris();
+		createPowerUps();
+	}
+	
+	function showLevel() {
+		if (_isPlayerAlive) {
+			Text.size = 2;
+			Text.display(50, 50, 'LEVEL: ${_level + 1}');
+		}
 	}
 	
 	function gameOver() {
@@ -180,42 +227,103 @@ class GameScene {
 		_playerColor = Col.hsl(Core.time * Globals.backgroundChangeSpeed, _playerSaturation, 0.5);
 	}
 	
-	function spawnDebris() {
-		if (_nextDebris == 0 && _debrisPool.length > 0) {
-			_spawnedDebrisPool.push(_debrisPool.shift());
-			_nextDebris = _DEBRIS_SPAWN_COOLDOWN;
-		} else {
-			_nextDebris--;
+	function createPowerUps() {
+		_powerUpActualAmount = _POWERUP_AMOUNTS[_level];
+		var directions = [0, 90, 180, 270];
+		for (index in 1 ... _powerUpActualAmount) {
+			var dir = Random.pick(directions);
+			var deviation = Random.int( -_POWERUP_MAX_DEVIATION, _POWERUP_MAX_DEVIATION);
+			var size = Random.int(PowerUp._MIN_SIZE, PowerUp._MAX_SIZE);
+			var x = Random.int(size, Gfx.screenwidth - size);
+			var y = Random.int(size, Gfx.screenheight - size);
+			var speed = Random.int(PowerUp._MIN_SPEED, PowerUp._MAX_SPEED);
+			
+			if (dir == 0) _powerUpPool.push(new PowerUp(-size, y, size, speed, dir + deviation));
+			else if (dir == 90) _powerUpPool.push(new PowerUp(x, -size, size, speed, dir + deviation));
+			else if (dir == 180) _powerUpPool.push(new PowerUp(Gfx.screenwidth + size, y, size, speed, dir + deviation));
+			else if (dir == 270) _powerUpPool.push(new PowerUp(x, Gfx.screenheight + size, size, speed, dir + deviation));
+
 		}
-		// TODO: Spawn debris every _DEBRIS_SPAWN_TIME
 	}
 	
 	function createDebris() {
+		_debrisActualAmount = _DEBRIS_AMOUNTS[_level];
 		var directions = [0, 90, 180, 270];
-		for (index in 0...39) {
+		for (index in 1 ... _debrisActualAmount) {
 			var dir = Random.pick(directions);
+			var deviation = Random.int( -_DEBRIS_MAX_DEVIATION, _DEBRIS_MAX_DEVIATION);
 			var size = Random.int(Debris._MIN_SIZE, Debris._MAX_SIZE);
 			var x = Random.int(size, Gfx.screenwidth - size);
 			var y = Random.int(size, Gfx.screenheight - size);
 			var speed = Random.int(Debris._MIN_SPEED, Debris._MAX_SPEED);
 			
-			if (index == 0) {
+			if (index == 1 && _level == 0) {
 				_debrisPool.push(new Debris(Gfx.screenwidth + size, Gfx.screenheightmid, size, Debris._MIN_SPEED, 180));
 			}
 			
-			if (dir == 0) _debrisPool.push(new Debris(-size, y, size, speed, dir));
-			else if (dir == 90) _debrisPool.push(new Debris(x, -size, size, speed, dir));
-			else if (dir == 180) _debrisPool.push(new Debris(Gfx.screenwidth + size, y, size, speed, dir));
-			else if (dir == 270) _debrisPool.push(new Debris(x, Gfx.screenheight + size, size, speed, dir));
+			if (dir == 0) _debrisPool.push(new Debris(-size, y, size, speed, dir + deviation));
+			else if (dir == 90) _debrisPool.push(new Debris(x, -size, size, speed, dir + deviation));
+			else if (dir == 180) _debrisPool.push(new Debris(Gfx.screenwidth + size, y, size, speed, dir + deviation));
+			else if (dir == 270) _debrisPool.push(new Debris(x, Gfx.screenheight + size, size, speed, dir + deviation));
 
 		}
 	}
 	
-	function checkOutOfBounds(x: Float, y: Float, size: Float) {
+	function spawnPowerUps() {
+		if (_nextPowerUp == 0 && _powerUpPool.length > 0) {
+			_spawnedPowerUpPool.push(_powerUpPool.shift());
+			_nextPowerUp = _powerUpSpawnCooldown;
+		} else _nextPowerUp--;	
+		
+		if (_powerUpPool.length == 0) {
+			if (_level + 1 < _POWERUP_AMOUNTS.length) {
+				_level++;
+				PowerUp._MIN_SIZE += 1;
+				PowerUp._MAX_SIZE += 2;
+				PowerUp._MIN_SPEED += 1;
+				PowerUp._MAX_SPEED += 2;
+				_powerUpSpawnCooldown -= _POWERUP_SPAWN_COOLDOWN_REDUCTION;
+			}
+			createPowerUps();
+		}
+	}
+	
+	function spawnDebris() {
+		if (_nextDebris == 0 && _debrisPool.length > 0) {
+			_spawnedDebrisPool.push(_debrisPool.shift());
+			_nextDebris = _debrisSpawnCooldown;
+			if (_debrisPool.length == _debrisActualAmount - 1) _nextDebris = _DEBRIS_SPAWN_TUTORIAL;
+		} else {
+			_nextDebris--;
+		}
+		
+		if (_debrisPool.length == 0) {
+			if (_level + 1 < _DEBRIS_AMOUNTS.length) {
+				_level++;
+				Debris._MIN_SIZE += 1;
+				Debris._MAX_SIZE += 2;
+				Debris._MIN_SPEED += 1;
+				Debris._MAX_SPEED += 2;
+				_debrisSpawnCooldown -= 8;
+			}
+			createDebris();
+		}
+	}
+		
+	function checkOutOfBounds(x: Float, y: Float, size: Float): Bool {
 		return x + size < 0 ||
 			x - size > Gfx.screenwidth ||
 			y + size < 0 ||
 			y - size > Gfx.screenheight;
+	}
+	
+	function isPowerUpOutOfBounds(powerUp: PowerUp): Bool {
+		var dir = powerUp.getDir();
+		var isOutOfBounds = false;
+		
+		isOutOfBounds = checkOutOfBounds(powerUp.getX(), powerUp.getY(), powerUp.getSize());
+		
+		return isOutOfBounds;
 	}
 	
 	function isDebrisOutOfBounds(debris: Debris): Bool {
@@ -236,7 +344,11 @@ class GameScene {
 		return isOutOfBounds;
 	}
 	
-	function checkCollisionDebrisPlayers(debris: Debris) {
+	//function checkCollisionPowerUpPlayer(powerUp: PowerUp) {
+		//
+	//}
+	
+	function checkCollisionDebrisPlayer(debris: Debris) {
 		// TODO: Fix debris collision offest...
 		if (!_isPlayerAlive) return;
 
@@ -276,6 +388,22 @@ class GameScene {
 		}
 	}
 	
+	function drawPowerUps() {
+		if (!_isPlayerAlive) return;
+		if (_spawnedPowerUpPool.length == 0) return;
+		for (powerUp in _spawnedPowerUpPool) {
+			if (isPowerUpOutOfBounds(powerUp)) {
+				_spawnedPowerUpPool.remove(powerUp);
+				continue;
+			}
+			// TODO: PLAYER AND/OR DEBRIS SIZE SHOULD HAVE A SMALLER HITBOX (size * ~0.8)
+			if (powerUp.isCollidingWithCircle(_playerX, _playerY, _playerSize)) playerCollidedWithPowerUp(powerUp);
+			//playerCollidedWithDebris(debris);
+			//checkCollisionDebrisPlayers(debris);
+			powerUp.draw();
+		}
+	}
+	
 	function drawDebris() {
 		//Text.display(50, 50, Convert.tostring(_spawnedDebrisPool.length));
 		//Gfx.drawcircle(_playerX, _playerY, _playerSize, Col.RED);
@@ -294,8 +422,17 @@ class GameScene {
 		}
 	}
 	
+	function playerCollidedWithPowerUp(powerUp: PowerUp) {
+		decreasePlayerSizeBy(-powerUp.getSize());
+		// SOUND: playerPowerUp
+		powerUp.kill();
+		_spawnedPowerUpPool.remove(powerUp);
+	}
+	
 	function playerCollidedWithDebris(debris: Debris) {
 		//if (!_isPlayerAlive) return;
+		decreasePlayerSizeBy(_DEBRIS_DAMAGE);
+		// SOUND: playerHit
 		debris.kill();
 		_spawnedDebrisPool.remove(debris);
 	}
