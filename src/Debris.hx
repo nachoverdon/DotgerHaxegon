@@ -5,6 +5,11 @@ import haxegon.*;
 class Debris 
 {
 	//private var _particles: Array<DebrisParticle>;
+	static public var _MIN_SPEED: Int = 4;
+	static public var _MAX_SPEED: Int = 7;
+	static public var _MIN_SIZE: Int = 10;
+	static public var _MAX_SIZE: Int = 20;
+	static private var _HITBOX: Float = 0.85;
 	private var _x: Float;
 	private var _y: Float;
 	private var _direction: Float;
@@ -76,11 +81,21 @@ class Debris
 		
 		Gfx.linethickness = 2;
 		Gfx.drawhexagon(_x, _y, _size, _angle, _color, _alpha);
+		//Gfx.drawcircle(_x, _y, _size * _HITBOX, Col.RED);
 
 	}
 	
 	public function kill() {
 		_isDead = true;
+	}
+	
+	public function isCollidingWithCircle(x: Float, y: Float, radius: Float) {
+		var dx = _x - x;
+		var dy = _y - y;
+		
+		var distance = Math.sqrt(dx * dx + dy * dy);
+		
+		return distance < (_size * _HITBOX) + radius;
 	}
 	
 }

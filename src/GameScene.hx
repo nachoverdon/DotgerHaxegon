@@ -15,13 +15,14 @@ class GameScene {
 	private var _PLAYER_MIN_SIZE: Float = 4;
 	private var _PLAYER_SPEED_X: Int = 10;
 	private var _PLAYER_SPEED_Y: Int = 10;
+	//private var _PLAYER_HITBOX: Float = 1.0;
 
 	private var _playerSize: Float;
 	private var _playerDecreaseSpeed: Float;
 	private var _playerSaturation: Float;
 	private var _playerColor: Int;
 	private var _playerAlpha: Float;
-	private var _isPlayerAlive: Bool = true;
+	private var _isPlayerAlive: Bool;
 	
 	private var _playerX: Float;
 	private var _playerY: Float;
@@ -29,9 +30,10 @@ class GameScene {
 	//private var _backgroundSaturation: Float;
 	//private var _backgroundLightness: Float;
 	
-	private var _DEBRIS_SPAWN_COOLDOWN: Float = 5;
+	private var _DEBRIS_SPAWN_COOLDOWN: Float = 60;
 	private var _nextDebris: Float;
 	private var _debrisPool: Array<Debris>;
+	private var _spawnedDebrisPool: Array<Debris>;
 	
 
 	function new() {
@@ -49,6 +51,7 @@ class GameScene {
 		//changeBackgroundColor();
 		checkInputs();
 		drawPlayer();
+		spawnDebris();
 		drawDebris();
 		debugGame();
 		if (!_isPlayerAlive) gameOver();
@@ -69,6 +72,8 @@ class GameScene {
 		//_backgroundSaturation = Globals.backgroundSaturation;
 		//_backgroundLightness = Globals.backgroundLightness;
 		_nextDebris = 0;
+		_debrisPool = new Array<Debris>();
+		_spawnedDebrisPool = new Array<Debris>();
 		createDebris();
 	}
 	
@@ -176,48 +181,57 @@ class GameScene {
 	}
 	
 	function spawnDebris() {
+		if (_nextDebris == 0 && _debrisPool.length > 0) {
+			_spawnedDebrisPool.push(_debrisPool.shift());
+			_nextDebris = _DEBRIS_SPAWN_COOLDOWN;
+		} else {
+			_nextDebris--;
+		}
 		// TODO: Spawn debris every _DEBRIS_SPAWN_TIME
 	}
 	
 	function createDebris() {
-		_debrisPool = new Array<Debris>();
 		var directions = [0, 90, 180, 270];
-		for (index in 0...19) {
+		for (index in 0...39) {
 			var dir = Random.pick(directions);
-			var size = Random.int(10, 20);
+			var size = Random.int(Debris._MIN_SIZE, Debris._MAX_SIZE);
 			var x = Random.int(size, Gfx.screenwidth - size);
 			var y = Random.int(size, Gfx.screenheight - size);
-			var speed = Random.int(2, 6);
+			var speed = Random.int(Debris._MIN_SPEED, Debris._MAX_SPEED);
 			
-			if (index == 0) dir = 180;
+			if (index == 0) {
+				_debrisPool.push(new Debris(Gfx.screenwidth + size, Gfx.screenheightmid, size, Debris._MIN_SPEED, 180));
+			}
 			
 			if (dir == 0) _debrisPool.push(new Debris(-size, y, size, speed, dir));
 			else if (dir == 90) _debrisPool.push(new Debris(x, -size, size, speed, dir));
 			else if (dir == 180) _debrisPool.push(new Debris(Gfx.screenwidth + size, y, size, speed, dir));
-			else if (dir == 270) _debrisPool.push(new Debris(x, Gfx.screenwidth + size, size, speed, dir));
+			else if (dir == 270) _debrisPool.push(new Debris(x, Gfx.screenheight + size, size, speed, dir));
 
 		}
 	}
 	
-	function checkOutOfBounds(x: Float, y: Float) {
-		return x < 0 || x > Gfx.screenwidth || y < 0 || y > Gfx.screenheight;
+	function checkOutOfBounds(x: Float, y: Float, size: Float) {
+		return x + size < 0 ||
+			x - size > Gfx.screenwidth ||
+			y + size < 0 ||
+			y - size > Gfx.screenheight;
 	}
 	
 	function isDebrisOutOfBounds(debris: Debris): Bool {
 		var dir = debris.getDir();
 		var isOutOfBounds = false;
 		
-		if (dir == 0) {
-			isOutOfBounds = checkOutOfBounds(debris.getX() + debris.getSize(), debris.getY());
-		} else if (dir == 90) {
-			isOutOfBounds = checkOutOfBounds(debris.getX(), debris.getY() + debris.getSize());
-		} else if (dir == 180) {		
-			isOutOfBounds = checkOutOfBounds(debris.getX() - debris.getSize(), debris.getY());
-		} else if (dir == 270) {			
-			isOutOfBounds = checkOutOfBounds(debris.getX(), debris.getY()  - debris.getSize());
-		}
-		
-		if (isOutOfBounds) _debrisPool.remove(debris);
+		//if (dir == 0) {
+			//isOutOfBounds = checkOutOfBounds(debris.getX() + debris.getSize(), debris.getY());
+		//} else if (dir == 90) {
+			//isOutOfBounds = checkOutOfBounds(debris.getX(), debris.getY() + debris.getSize());
+		//} else if (dir == 180) {		
+			//isOutOfBounds = checkOutOfBounds(debris.getX() - debris.getSize(), debris.getY());
+		//} else if (dir == 270) {			
+			//isOutOfBounds = checkOutOfBounds(debris.getX(), debris.getY() - debris.getSize());
+		//}
+		isOutOfBounds = checkOutOfBounds(debris.getX(), debris.getY(), debris.getSize());
 		
 		return isOutOfBounds;
 	}
@@ -243,6 +257,7 @@ class GameScene {
 			w: debrisSize,
 			h: debrisSize
 		};
+		//Gfx.drawcircle(_playerX, _playerY, _playerSize, Col.RED);
 		//Gfx.drawbox(player.x, player.y, player.w, player.h, Col.WHITE);
 		//Gfx.drawbox(deb.x, deb.y, deb.w, deb.h, Col.WHITE);
 		//Text.display(player.x, player.y, Convert.tostring(_playerSize));
@@ -257,16 +272,32 @@ class GameScene {
 		if (isOverlaping) {
 			// playerHit();
 			debris.kill();
-			_debrisPool.remove(debris);
+			_spawnedDebrisPool.remove(debris);
 		}
 	}
 	
 	function drawDebris() {
-		for (debris in _debrisPool) {
-			if (isDebrisOutOfBounds(debris)) return;
-			checkCollisionDebrisPlayers(debris);
+		//Text.display(50, 50, Convert.tostring(_spawnedDebrisPool.length));
+		//Gfx.drawcircle(_playerX, _playerY, _playerSize, Col.RED);
+		if (!_isPlayerAlive) return;
+		if (_spawnedDebrisPool.length == 0) return;
+		for (debris in _spawnedDebrisPool) {
+			if (isDebrisOutOfBounds(debris)) {
+				_spawnedDebrisPool.remove(debris);
+				continue;
+			}
+			// TODO: PLAYER AND/OR DEBRIS SIZE SHOULD HAVE A SMALLER HITBOX (size * ~0.8)
+			if (debris.isCollidingWithCircle(_playerX, _playerY, _playerSize)) playerCollidedWithDebris(debris);
+			//playerCollidedWithDebris(debris);
+			//checkCollisionDebrisPlayers(debris);
 			debris.draw();
 		}
+	}
+	
+	function playerCollidedWithDebris(debris: Debris) {
+		//if (!_isPlayerAlive) return;
+		debris.kill();
+		_spawnedDebrisPool.remove(debris);
 	}
 	
 	// Changes the background saturation and lightness with the arrows.
