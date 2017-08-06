@@ -35,11 +35,6 @@ class Debris
 		_color = color;
 		_alpha = alpha;
 		
-		_MIN_SPEED = _INITIAL_MIN_SPEED;
-		_MAX_SPEED = _INITIAL_MAX_SPEED;
-		_MIN_SIZE = _INITIAL_MIN_SIZE;
-		_MAX_SIZE = _INITIAL_MAX_SIZE;
-		
 		_isDead = false;
 		//updateColor();
 		updateAngle();

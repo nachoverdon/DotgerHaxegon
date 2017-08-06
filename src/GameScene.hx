@@ -9,7 +9,7 @@ class GameScene {
 	private var GAME_OVER: String = 'GAME OVER';
 	
 	//private var _PLAYER_MENU_DECREASE_SPEED: Float = 0.005;
-	private var _PLAYER_INITIAL_DECREASE_SPEED: Float = 0.05;
+	private var _PLAYER_INITIAL_DECREASE_SPEED: Float = 0.06;
 	private var _PLAYER_INITIAL_SIZE: Float = 50;
 	private var _PLAYER_INITIAL_SATURATION: Float = 0.5;
 	private var _PLAYER_MIN_SIZE: Float = 4;
@@ -31,9 +31,10 @@ class GameScene {
 	private var _level: Int;
 	//private var _backgroundSaturation: Float;
 	//private var _backgroundLightness: Float;
-	private var _POWERUP_AMOUNTS: Array<Int> = [5, 10, 15, 20, 100];
-	private var _POWERUP_MAX_DEVIATION: Int = 20;
-	private var _POWERUP_INITIAL_COOLDOWN: Float = 200;
+	private var _POWERUP_AMOUNTS: Array<Int> = [50, 75, 125, 250, 400];
+	private var _POWERUP_MAX_DEVIATION: Int = 15;
+	private var _POWERUP_MIN_DEVIATION: Int = 0;
+	private var _POWERUP_INITIAL_COOLDOWN: Float = 175;
 	private var _POWERUP_SPAWN_COOLDOWN_REDUCTION: Float = 5;
 	private var _powerUpSpawnCooldown: Float;
 	private var _powerUpActualAmount: Int;
@@ -42,11 +43,12 @@ class GameScene {
 	private var _spawnedPowerUpPool: Array<PowerUp>;
 	
 	
-	private var _DEBRIS_AMOUNTS: Array<Int> = [50, 100, 150, 200, 500];
+	private var _DEBRIS_AMOUNTS: Array<Int> = [100, 150, 250, 500, 750];
 	//private var _DEBRIS_AMOUNTS: Array<Int> = [10, 20, 30, 30, 30];
 	private var _DEBRIS_MAX_DEVIATION: Int = 20;
+	private var _DEBRIS_MIN_DEVIATION: Int = 5;
 	private var _DEBRIS_SPAWN_TUTORIAL: Float = 120;
-	private var _DEBRIS_INITIAL_COOLDOWN: Float = 45;
+	private var _DEBRIS_INITIAL_COOLDOWN: Float = 40;
 	private var _debrisSpawnCooldown: Float;
 	private var _debrisActualAmount: Int;
 	private var _nextDebris: Float;
@@ -118,6 +120,17 @@ class GameScene {
 	}
 	
 	function showLevel() {
+		//Text.size = 1;
+		//Text.display(200, 10, 'd minsize' + Convert.tostring(Debris._MIN_SIZE));
+		//Text.display(200, 20, 'd maxsize' + Convert.tostring(Debris._MAX_SIZE));
+		//Text.display(200, 30, 'd minspd' + Convert.tostring(Debris._MIN_SPEED));
+		//Text.display(200, 40, 'd maxspd' + Convert.tostring(Debris._MAX_SPEED));
+		//Text.display(300, 10, 'pu minsize' + Convert.tostring(PowerUp._MIN_SIZE));
+		//Text.display(300, 20, 'pu maxsize' + Convert.tostring(PowerUp._MAX_SIZE));
+		//Text.display(300, 30, 'pu minspd' + Convert.tostring(PowerUp._MIN_SPEED));
+		//Text.display(300, 40, 'pu maxspd' + Convert.tostring(PowerUp._MAX_SPEED));
+		
+		
 		if (_isPlayerAlive) {
 			Text.size = 2;
 			Text.display(50, 50, 'LEVEL: ${_level + 1}');
@@ -228,15 +241,38 @@ class GameScene {
 	}
 	
 	function createPowerUps() {
+		function fixDeviation(dir: Int, x: Float, y: Float) {
+			var deviation = 0;
+			// horizontal
+			if (dir == 0) {
+				if (y > Gfx.screenheightmid) deviation = Random.int( -_POWERUP_MAX_DEVIATION, _POWERUP_MIN_DEVIATION);
+				else if (y < Gfx.screenheightmid) deviation = Random.int(-_POWERUP_MIN_DEVIATION, _POWERUP_MAX_DEVIATION);
+			} else if (dir == 180) {
+				if (y < Gfx.screenheightmid) deviation = Random.int( -_POWERUP_MAX_DEVIATION, _POWERUP_MIN_DEVIATION);
+				else if (y > Gfx.screenheightmid) deviation = Random.int(-_POWERUP_MIN_DEVIATION, _POWERUP_MAX_DEVIATION);
+			}
+			// vertical
+			if (dir == 90) {
+				if (x < Gfx.screenwidthmid) deviation = Random.int( -_POWERUP_MAX_DEVIATION, _POWERUP_MIN_DEVIATION);
+				else if (x > Gfx.screenwidthmid) deviation = Random.int(-_POWERUP_MIN_DEVIATION, _POWERUP_MAX_DEVIATION);
+			} else if (dir == 270) {
+				if (x > Gfx.screenwidthmid) deviation = Random.int( -_POWERUP_MAX_DEVIATION, _POWERUP_MIN_DEVIATION);
+				else if (x < Gfx.screenwidthmid) deviation = Random.int(-_POWERUP_MIN_DEVIATION, _POWERUP_MAX_DEVIATION);
+			}
+			return deviation;
+		}
+		
+		
 		_powerUpActualAmount = _POWERUP_AMOUNTS[_level];
 		var directions = [0, 90, 180, 270];
 		for (index in 1 ... _powerUpActualAmount) {
 			var dir = Random.pick(directions);
-			var deviation = Random.int( -_POWERUP_MAX_DEVIATION, _POWERUP_MAX_DEVIATION);
 			var size = Random.int(PowerUp._MIN_SIZE, PowerUp._MAX_SIZE);
 			var x = Random.int(size, Gfx.screenwidth - size);
 			var y = Random.int(size, Gfx.screenheight - size);
 			var speed = Random.int(PowerUp._MIN_SPEED, PowerUp._MAX_SPEED);
+			var deviation = fixDeviation(dir, x, y);
+
 			
 			if (dir == 0) _powerUpPool.push(new PowerUp(-size, y, size, speed, dir + deviation));
 			else if (dir == 90) _powerUpPool.push(new PowerUp(x, -size, size, speed, dir + deviation));
@@ -247,20 +283,42 @@ class GameScene {
 	}
 	
 	function createDebris() {
+		function fixDeviation(dir: Int, x: Float, y: Float) {
+			var deviation = 0;
+			// horizontal
+			if (dir == 0) {
+				if (y > Gfx.screenheightmid) deviation = Random.int( -_DEBRIS_MAX_DEVIATION, _DEBRIS_MIN_DEVIATION);
+				else if (y < Gfx.screenheightmid) deviation = Random.int(-_DEBRIS_MIN_DEVIATION, _DEBRIS_MAX_DEVIATION);
+			} else if (dir == 180) {
+				if (y < Gfx.screenheightmid) deviation = Random.int( -_DEBRIS_MAX_DEVIATION, _DEBRIS_MIN_DEVIATION);
+				else if (y > Gfx.screenheightmid) deviation = Random.int(-_DEBRIS_MIN_DEVIATION, _DEBRIS_MAX_DEVIATION);
+			}
+			// vertical
+			if (dir == 90) {
+				if (x < Gfx.screenwidthmid) deviation = Random.int( -_DEBRIS_MAX_DEVIATION, _DEBRIS_MIN_DEVIATION);
+				else if (x > Gfx.screenwidthmid) deviation = Random.int(-_DEBRIS_MIN_DEVIATION, _DEBRIS_MAX_DEVIATION);
+			} else if (dir == 270) {
+				if (x > Gfx.screenwidthmid) deviation = Random.int( -_DEBRIS_MAX_DEVIATION, _DEBRIS_MIN_DEVIATION);
+				else if (x < Gfx.screenwidthmid) deviation = Random.int(-_DEBRIS_MIN_DEVIATION, _DEBRIS_MAX_DEVIATION);
+			}
+			return deviation;
+		}
+		
 		_debrisActualAmount = _DEBRIS_AMOUNTS[_level];
 		var directions = [0, 90, 180, 270];
 		for (index in 1 ... _debrisActualAmount) {
 			var dir = Random.pick(directions);
 			var deviation = Random.int( -_DEBRIS_MAX_DEVIATION, _DEBRIS_MAX_DEVIATION);
 			var size = Random.int(Debris._MIN_SIZE, Debris._MAX_SIZE);
-			var x = Random.int(size, Gfx.screenwidth - size);
-			var y = Random.int(size, Gfx.screenheight - size);
+			var x = Random.int(Convert.toint(size / 2), Gfx.screenwidth - Convert.toint(size / 2));
+			var y = Random.int(Convert.toint(size / 2), Gfx.screenheight - Convert.toint(size / 2));
 			var speed = Random.int(Debris._MIN_SPEED, Debris._MAX_SPEED);
 			
 			if (index == 1 && _level == 0) {
 				_debrisPool.push(new Debris(Gfx.screenwidth + size, Gfx.screenheightmid, size, Debris._MIN_SPEED, 180));
 			}
 			
+			fixDeviation(dir, x, y);
 			if (dir == 0) _debrisPool.push(new Debris(-size, y, size, speed, dir + deviation));
 			else if (dir == 90) _debrisPool.push(new Debris(x, -size, size, speed, dir + deviation));
 			else if (dir == 180) _debrisPool.push(new Debris(Gfx.screenwidth + size, y, size, speed, dir + deviation));
@@ -276,14 +334,6 @@ class GameScene {
 		} else _nextPowerUp--;	
 		
 		if (_powerUpPool.length == 0) {
-			if (_level + 1 < _POWERUP_AMOUNTS.length) {
-				_level++;
-				PowerUp._MIN_SIZE += 1;
-				PowerUp._MAX_SIZE += 2;
-				PowerUp._MIN_SPEED += 1;
-				PowerUp._MAX_SPEED += 2;
-				_powerUpSpawnCooldown -= _POWERUP_SPAWN_COOLDOWN_REDUCTION;
-			}
 			createPowerUps();
 		}
 	}
@@ -305,6 +355,15 @@ class GameScene {
 				Debris._MIN_SPEED += 1;
 				Debris._MAX_SPEED += 2;
 				_debrisSpawnCooldown -= 8;
+				
+				PowerUp._MIN_SIZE += 1;
+				PowerUp._MAX_SIZE += 2;
+				PowerUp._MIN_SPEED += 1;
+				PowerUp._MAX_SPEED += 2;
+				_powerUpSpawnCooldown -= _POWERUP_SPAWN_COOLDOWN_REDUCTION;
+				_powerUpPool = new Array<PowerUp>();
+				createPowerUps();
+				
 			}
 			createDebris();
 		}
