@@ -4,6 +4,7 @@ import haxegon.*;
 
 class Globals 
 {
+	static public var _HIGH_SCORE: Int = 0;
 	static public var _MIN_SPEED: Int = 5;
 	static public var _MAX_SPEED: Int = 7;
 	static public var _MIN_SIZE: Int = 10;

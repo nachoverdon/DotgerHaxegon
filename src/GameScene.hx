@@ -5,8 +5,16 @@ import haxegon.*;
 class GameScene {
 	private var DEBUG_MODE: Bool = false;
 	
+	private var _highScore: Int;
+	private var _score: Int;
+	private var _SCORE_POWERUP: Int = 2;
+	private var _SCORE_DEBRIS: Int = 1;
+	private var _SCORE_PENALTY_DEBRIS: Int = 4;
+	private var _SCORE_NEXT_LEVEL: Int = 50;
+	
 	private var RESTART: String = '[R]estart';
 	private var GAME_OVER: String = 'GAME OVER';
+	
 	
 	//private var _PLAYER_MENU_DECREASE_SPEED: Float = 0.005;
 	private var _PLAYER_INITIAL_DECREASE_SPEED: Float = 0.06;
@@ -16,7 +24,7 @@ class GameScene {
 	private var _PLAYER_SPEED_X: Int = 10;
 	private var _PLAYER_SPEED_Y: Int = 10;
 	//private var _PLAYER_HITBOX: Float = 1.0;
-	private var _DEBRIS_DAMAGE: Float = 4;
+	private var _DEBRIS_DAMAGE: Float = 6;
 
 	private var _playerSize: Float;
 	private var _playerDecreaseSpeed: Float;
@@ -76,12 +84,16 @@ class GameScene {
 		drawDebris();
 		drawPowerUps();
 		debugGame();
-		showLevel();
+		//showLevel();
+		showScore();
 		if (!_isPlayerAlive) gameOver();
 	}
 		
 	// Initializes all the necessary variables.
 	function initialize() {
+		_highScore = Globals._HIGH_SCORE;
+		_score = 0;
+		
 		_playerSize = _PLAYER_INITIAL_SIZE;
 		_playerDecreaseSpeed = _PLAYER_INITIAL_DECREASE_SPEED;
 		_playerSaturation = 0.5;
@@ -119,6 +131,62 @@ class GameScene {
 		createPowerUps();
 	}
 	
+	function getUIColor(): Int {
+		return Col.hsl(
+				Core.time * Globals.backgroundChangeSpeed,
+				Globals.backgroundSaturation + Globals.UI_TEXT_SATURATION,
+				Globals.backgroundLightness + Globals.UI_TEXT_LIGHTNESS
+			);
+	}
+	
+	function checkHighScore() {
+		if (_score > Globals._HIGH_SCORE) Globals._HIGH_SCORE = _score;
+	}
+	
+	function showScore() {
+		if (_score > Globals._HIGH_SCORE) _highScore = _score;
+		var scoreX;
+		var scoreY;
+		var highScoreX;
+		var highScoreY;
+		var score = Convert.tostring(_score);
+		var highScore = Convert.tostring(_highScore);
+		var highScoreColor = Col.WHITE;
+		if (_isPlayerAlive) {
+			Text.align(Text.RIGHT);
+			Text.size = 3;
+			scoreX = Gfx.screenwidth - 10;
+			scoreY = 60;
+			Text.display(scoreX, scoreY, score, getUIColor());
+			
+			Text.size = 1;
+			highScoreX = Gfx.screenwidth - 10;
+			highScoreY = 30;
+		} else {
+			Text.align(Text.CENTER);
+			Text.size = 5;
+			scoreX = Gfx.screenwidthmid;
+			scoreY = Gfx.screenheightmid - 15;
+			Text.display(scoreX, scoreY, score, getUIColor());
+			
+			Text.size = 3;
+			Text.align(Text.CENTER);
+			highScoreX = Gfx.screenwidthmid;
+			highScoreY = Gfx.screenheightmid - 120;
+		}
+		
+		if (_score == _highScore) highScoreColor = getUIColor();
+		
+		Text.display(highScoreX, highScoreY, Convert.tostring(Globals._HIGH_SCORE), highScoreColor);
+		Text.display(
+			highScoreX,
+			highScoreY - Text.height('HI-SCORE') - 10,
+			'HI-SCORE',
+			highScoreColor
+		);
+		
+	}
+	
 	function showLevel() {
 		//Text.size = 1;
 		//Text.display(200, 10, 'd minsize' + Convert.tostring(Debris._MIN_SIZE));
@@ -140,18 +208,17 @@ class GameScene {
 	function gameOver() {
 		Text.align(Text.CENTER);
 		Text.size = 4;
-		Text.display(Gfx.screenwidthmid, Gfx.screenheightmid - 50, GAME_OVER);
+		Text.display(Gfx.screenwidthmid, Gfx.screenheightmid - 80, GAME_OVER);
 		Text.size = 3;
 
 		
-		Text.display(Gfx.screenwidthmid, Gfx.screenheightmid + 20, RESTART);
+		Text.display(Gfx.screenwidthmid, Gfx.screenheightmid + 50, RESTART);
 		Text.align(Text.LEFT);
-		Text.display(Gfx.screenwidthmid - Math.floor(Text.width(RESTART) / 2) + Text.width('[') + 3, Gfx.screenheightmid + 20, 'R',
-			Col.hsl(
-				Core.time * Globals.backgroundChangeSpeed,
-				Globals.backgroundSaturation + Globals.UI_TEXT_SATURATION,
-				Globals.backgroundLightness + Globals.UI_TEXT_LIGHTNESS
-			)
+		Text.display(
+			Gfx.screenwidthmid - Math.floor(Text.width(RESTART) / 2) + Text.width('[') + 3,
+			Gfx.screenheightmid + 50,
+			'R',
+			getUIColor()
 		);
 		
 		
@@ -188,12 +255,8 @@ class GameScene {
 		//	Ask if they want to restart and whatnot
 		_playerAlpha = 0;
 		_isPlayerAlive = false;
+		checkHighScore();
 	}
-	
-	//// Changes the color of the game's background.
-	//function changeBackgroundColor() {
-		//Gfx.clearscreen(Col.hsl(Core.time * 30, _backgroundSaturation, _backgroundLightness));
-	//}
 	
 	// Checks for input from the player and moves the ball around.
 	function checkPlayerInputs() {	
@@ -308,14 +371,15 @@ class GameScene {
 		var directions = [0, 90, 180, 270];
 		for (index in 1 ... _debrisActualAmount) {
 			var dir = Random.pick(directions);
-			var deviation = Random.int( -_DEBRIS_MAX_DEVIATION, _DEBRIS_MAX_DEVIATION);
 			var size = Random.int(Debris._MIN_SIZE, Debris._MAX_SIZE);
 			var x = Random.int(Convert.toint(size / 2), Gfx.screenwidth - Convert.toint(size / 2));
 			var y = Random.int(Convert.toint(size / 2), Gfx.screenheight - Convert.toint(size / 2));
 			var speed = Random.int(Debris._MIN_SPEED, Debris._MAX_SPEED);
+			var deviation = fixDeviation(dir, x, y);
 			
-			if (index == 1 && _level == 0) {
+			if (index == 1 && _level == 0 && Globals._HIGH_SCORE == 0) {
 				_debrisPool.push(new Debris(Gfx.screenwidth + size, Gfx.screenheightmid, size, Debris._MIN_SPEED, 180));
+				continue;
 			}
 			
 			fixDeviation(dir, x, y);
@@ -328,6 +392,7 @@ class GameScene {
 	}
 	
 	function spawnPowerUps() {
+		if (!_isPlayerAlive) return;
 		if (_nextPowerUp == 0 && _powerUpPool.length > 0) {
 			_spawnedPowerUpPool.push(_powerUpPool.shift());
 			_nextPowerUp = _powerUpSpawnCooldown;
@@ -339,6 +404,7 @@ class GameScene {
 	}
 	
 	function spawnDebris() {
+		if (!_isPlayerAlive) return;
 		if (_nextDebris == 0 && _debrisPool.length > 0) {
 			_spawnedDebrisPool.push(_debrisPool.shift());
 			_nextDebris = _debrisSpawnCooldown;
@@ -365,6 +431,7 @@ class GameScene {
 				createPowerUps();
 				
 			}
+			_score += _SCORE_NEXT_LEVEL * (_level + 1);
 			createDebris();
 		}
 	}
@@ -389,63 +456,50 @@ class GameScene {
 		var dir = debris.getDir();
 		var isOutOfBounds = false;
 		
-		//if (dir == 0) {
-			//isOutOfBounds = checkOutOfBounds(debris.getX() + debris.getSize(), debris.getY());
-		//} else if (dir == 90) {
-			//isOutOfBounds = checkOutOfBounds(debris.getX(), debris.getY() + debris.getSize());
-		//} else if (dir == 180) {		
-			//isOutOfBounds = checkOutOfBounds(debris.getX() - debris.getSize(), debris.getY());
-		//} else if (dir == 270) {			
-			//isOutOfBounds = checkOutOfBounds(debris.getX(), debris.getY() - debris.getSize());
-		//}
 		isOutOfBounds = checkOutOfBounds(debris.getX(), debris.getY(), debris.getSize());
 		
 		return isOutOfBounds;
 	}
 	
-	//function checkCollisionPowerUpPlayer(powerUp: PowerUp) {
+	//function checkCollisionDebrisPlayer(debris: Debris) {
+		//// TODO: Fix debris collision offest...
+		//if (!_isPlayerAlive) return;
+//
+		//var debrisHitbox = 1.5;
+		//var playerHitbox = 1.5;
+		//var playerSize = _playerSize * playerHitbox;
+		//var debrisSize = debris.getSize() * debrisHitbox;
 		//
+		//var player = {
+			//x: _playerX - playerSize / 2,
+			//y: _playerY - playerSize / 2,
+			//w: playerSize,
+			//h: playerSize
+		//};
+		//var deb = {
+			//x: debris.getX() - debrisSize / 2,
+			//y: debris.getY() - debrisSize / 2,
+			//w: debrisSize,
+			//h: debrisSize
+		//};
+		////Gfx.drawcircle(_playerX, _playerY, _playerSize, Col.RED);
+		////Gfx.drawbox(player.x, player.y, player.w, player.h, Col.WHITE);
+		////Gfx.drawbox(deb.x, deb.y, deb.w, deb.h, Col.WHITE);
+		////Text.display(player.x, player.y, Convert.tostring(_playerSize));
+		//
+		//var isOverlaping = Geom.overlap(
+			//player.x, player.y,
+			//player.w, player.h,
+			//deb.x, deb.y,
+			//deb.w, deb.h
+		//);
+		//
+		//if (isOverlaping) {
+			//// playerHit();
+			//debris.kill();
+			//_spawnedDebrisPool.remove(debris);
+		//}
 	//}
-	
-	function checkCollisionDebrisPlayer(debris: Debris) {
-		// TODO: Fix debris collision offest...
-		if (!_isPlayerAlive) return;
-
-		var debrisHitbox = 1.5;
-		var playerHitbox = 1.5;
-		var playerSize = _playerSize * playerHitbox;
-		var debrisSize = debris.getSize() * debrisHitbox;
-		
-		var player = {
-			x: _playerX - playerSize / 2,
-			y: _playerY - playerSize / 2,
-			w: playerSize,
-			h: playerSize
-		};
-		var deb = {
-			x: debris.getX() - debrisSize / 2,
-			y: debris.getY() - debrisSize / 2,
-			w: debrisSize,
-			h: debrisSize
-		};
-		//Gfx.drawcircle(_playerX, _playerY, _playerSize, Col.RED);
-		//Gfx.drawbox(player.x, player.y, player.w, player.h, Col.WHITE);
-		//Gfx.drawbox(deb.x, deb.y, deb.w, deb.h, Col.WHITE);
-		//Text.display(player.x, player.y, Convert.tostring(_playerSize));
-		
-		var isOverlaping = Geom.overlap(
-			player.x, player.y,
-			player.w, player.h,
-			deb.x, deb.y,
-			deb.w, deb.h
-		);
-		
-		if (isOverlaping) {
-			// playerHit();
-			debris.kill();
-			_spawnedDebrisPool.remove(debris);
-		}
-	}
 	
 	function drawPowerUps() {
 		if (!_isPlayerAlive) return;
@@ -470,6 +524,7 @@ class GameScene {
 		if (_spawnedDebrisPool.length == 0) return;
 		for (debris in _spawnedDebrisPool) {
 			if (isDebrisOutOfBounds(debris)) {
+				_score += _SCORE_DEBRIS;
 				_spawnedDebrisPool.remove(debris);
 				continue;
 			}
@@ -482,18 +537,20 @@ class GameScene {
 	}
 	
 	function playerCollidedWithPowerUp(powerUp: PowerUp) {
-		decreasePlayerSizeBy(-powerUp.getSize());
+		decreasePlayerSizeBy( -powerUp.getSize());
+		_score += _SCORE_POWERUP;
 		// SOUND: playerPowerUp
 		powerUp.kill();
 		_spawnedPowerUpPool.remove(powerUp);
 	}
 	
 	function playerCollidedWithDebris(debris: Debris) {
-		//if (!_isPlayerAlive) return;
 		decreasePlayerSizeBy(_DEBRIS_DAMAGE);
 		// SOUND: playerHit
 		debris.kill();
 		_spawnedDebrisPool.remove(debris);
+		if (_score > _SCORE_PENALTY_DEBRIS) _score -= _SCORE_PENALTY_DEBRIS;
+		else _score = 0;
 	}
 	
 	// Changes the background saturation and lightness with the arrows.
