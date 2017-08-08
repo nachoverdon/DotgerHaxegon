@@ -5,7 +5,6 @@ import haxegon.*;
 class GameScene {
 	private var DEBUG_MODE: Bool = false;
 	
-	private var _songPlaying: Bool;
 	private var _actualSong: String;
 	private var _VOLUME_DEBRIS: Float = 0.5;
 	private var _VOLUME_POWERUP: Float = 0.4;
@@ -41,7 +40,6 @@ class GameScene {
 	private var _playerX: Float;
 	private var _playerY: Float;
 	
-	private var _level: Int;
 	//private var _backgroundSaturation: Float;
 	//private var _backgroundLightness: Float;
 	private var _POWERUP_AMOUNTS: Array<Int> = [50, 75, 125, 250, 400];
@@ -96,8 +94,7 @@ class GameScene {
 		
 	// Initializes all the necessary variables.
 	function initialize() {
-		_songPlaying = true;
-		_level = 0;
+		Globals.level = 0;
 		updateMusic();
 		//playSong();
 		Music.playsound('playerHitPowerUp', _VOLUME_POWERUP);
@@ -119,7 +116,7 @@ class GameScene {
 		PowerUp._MAX_SPEED = PowerUp._INITIAL_MAX_SPEED;
 		
 		_powerUpSpawnCooldown = _POWERUP_INITIAL_COOLDOWN;
-		_powerUpActualAmount = _POWERUP_AMOUNTS[_level];
+		_powerUpActualAmount = _POWERUP_AMOUNTS[Globals.level];
 		_nextPowerUp = _POWERUP_INITIAL_COOLDOWN;
 		_powerUpPool = new Array<PowerUp>();
 		_spawnedPowerUpPool = new Array<PowerUp>();
@@ -131,7 +128,7 @@ class GameScene {
 		Debris._MIN_SPEED = Debris._INITIAL_MIN_SPEED;
 		Debris._MAX_SPEED = Debris._INITIAL_MAX_SPEED;
 		_debrisSpawnCooldown = _DEBRIS_INITIAL_COOLDOWN;
-		_debrisActualAmount = _DEBRIS_AMOUNTS[_level];
+		_debrisActualAmount = _DEBRIS_AMOUNTS[Globals.level];
 		_nextDebris = 0;
 		
 		_debrisPool = new Array<Debris>();
@@ -142,9 +139,9 @@ class GameScene {
 	
 	function updateMusic() {
 		var delay: Float = 0.1;
-		Music.fadeout();
 		
-		switch _level {			
+		
+		switch Globals.level {			
 			case 0:
 				delay = 0.4;
 				_actualSong = 'dotger100bpm';
@@ -158,7 +155,10 @@ class GameScene {
 				_actualSong = 'dotger140bpm';
 		}
 		
-		if (_songPlaying) Core.delaycall(playSong, delay);
+		if (Globals._songPlaying) {
+			Music.fadeout();
+			Core.delaycall(playSong, delay);
+		}
 	}
 	
 	function playSong() {
@@ -235,7 +235,7 @@ class GameScene {
 		
 		if (_isPlayerAlive) {
 			Text.size = 2;
-			Text.display(50, 50, 'LEVEL: ${_level + 1}');
+			Text.display(50, 50, 'LEVEL: ${Globals.level + 1}');
 		}
 	}
 	
@@ -263,14 +263,16 @@ class GameScene {
 	// Checks for all the inputs.
 	function checkInputs() {
 		if (_isPlayerAlive) checkPlayerInputs();
-
+		
+		Globals.checkToggleBackgroundCircles();	
+		
 		if (Input.justpressed(Key.M)) {
-			if (_songPlaying) {
+			if (Globals._songPlaying) {
 				Music.stopsong();
-				_songPlaying = false;
+				Globals._songPlaying = false;
 			}else {
 				playSong();
-				_songPlaying = true;
+				Globals._songPlaying = true;
 			}
 		}
 		
@@ -373,7 +375,7 @@ class GameScene {
 		}
 		
 		
-		_powerUpActualAmount = _POWERUP_AMOUNTS[_level];
+		_powerUpActualAmount = _POWERUP_AMOUNTS[Globals.level];
 		var directions = [0, 90, 180, 270];
 		for (index in 1 ... _powerUpActualAmount) {
 			var dir = Random.pick(directions);
@@ -414,7 +416,7 @@ class GameScene {
 			return deviation;
 		}
 		
-		_debrisActualAmount = _DEBRIS_AMOUNTS[_level];
+		_debrisActualAmount = _DEBRIS_AMOUNTS[Globals.level];
 		var directions = [0, 90, 180, 270];
 		for (index in 1 ... _debrisActualAmount) {
 			var dir = Random.pick(directions);
@@ -424,7 +426,7 @@ class GameScene {
 			var speed = Random.int(Debris._MIN_SPEED, Debris._MAX_SPEED);
 			var deviation = fixDeviation(dir, x, y);
 			
-			if (index == 1 && _level == 0 && Globals._HIGH_SCORE == 0) {
+			if (index == 1 && Globals.level == 0 && Globals._HIGH_SCORE == 0) {
 				_debrisPool.push(new Debris(Gfx.screenwidth + size, Gfx.screenheightmid, size, Debris._MIN_SPEED, 180));
 				continue;
 			}
@@ -461,8 +463,8 @@ class GameScene {
 		}
 		
 		if (_debrisPool.length == 0) {
-			if (_level + 1 < _DEBRIS_AMOUNTS.length) {
-				_level++;
+			if (Globals.level + 1 < _DEBRIS_AMOUNTS.length) {
+				Globals.level++;
 				Debris._MIN_SIZE += 1;
 				Debris._MAX_SIZE += 2;
 				Debris._MIN_SPEED += 1;
@@ -478,7 +480,7 @@ class GameScene {
 				createPowerUps();
 				
 			}
-			_score += _SCORE_NEXT_LEVEL * (_level + 1);
+			_score += _SCORE_NEXT_LEVEL * (Globals.level + 1);
 			createDebris();
 			updateMusic();
 		}

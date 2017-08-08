@@ -14,7 +14,7 @@ class MenuScene
 	private var player: Ball;
 	
 	private var _HOW_TO: String = 'Arrows';
-	private	var _HINT_DELAY: Int = 6;
+	private	var _HINT_DELAY: Int = 4;
 	private var _HINT_OFFSET: Float = 25;
 	private var _HINT_OFFSET_EXTRA: Float = 10;
 	private var _HINT_OFFSET_EXTRA_SPEED: Float = 0.125;
@@ -67,6 +67,8 @@ class MenuScene
 	
 	function update() {
 		Globals.changeBackgroundColor();
+		Globals.checkToggleBackgroundCircles();
+		Globals.checkToggleMusic();
 		//displayPlayText();
 		drawPlayer();
 		drawDot();
@@ -200,6 +202,7 @@ class MenuScene
 		var dotOffset = _HINT_OFFSET + _offsetExtra;
 		var charSize = Convert.toint(Text.height('>') / 2);
 		
+		// Arrows
 		Text.align(Text.CENTER);
 		Text.size = _TXT_SIZE;
 		
@@ -214,6 +217,38 @@ class MenuScene
 		Text.rotation(0);
 		Text.display(Gfx.screenwidthmid - playerOffset, Gfx.screenheightmid - charSize, '<', color);
 		Text.display(Gfx.screenwidthmid + playerOffset, Gfx.screenheightmid - charSize, '>', color);
+		
+		// Mute
+		Text.align(Text.RIGHT);
+		Text.display(Gfx.screenwidthmid - 50, Gfx.screenheight - 100, '[M]usic');
+		Text.align(Text.LEFT);
+		Text.display(
+			Gfx.screenwidthmid - 50 - Text.width('[M]usic') + 2 + Text.width('['),
+			Gfx.screenheight - 100,
+			'M',
+			color
+		);
+		//Gfx.fillcircle(Gfx.screenwidthmid - 50, Gfx.screenheight - 100, 1, Col.BLACK);
+		//Gfx.fillcircle(Gfx.screenwidthmid - 50 - Text.width('[M]usic'), Gfx.screenheight - 100, 1, Col.RED);
+		//Gfx.fillcircle(Gfx.screenwidthmid - 50 - Text.width('[M]usic') + 2, Gfx.screenheight - 100, 1, Col.YELLOW);
+		//Gfx.fillcircle(Gfx.screenwidthmid - 50 - Text.width('[M]usic') + 2 + Text.width('['), Gfx.screenheight - 100, 1, Col.ORANGE);
+		
+		if (Globals._songPlaying) Text.display(Gfx.screenwidthmid - 100, Gfx.screenheight - 75, 'ON', color);
+		else Text.display(Gfx.screenwidthmid - 100, Gfx.screenheight - 75, 'OFF', color);
+		//Gfx.fillcircle(Gfx.screenwidthmid - 100 , Gfx.screenheight - 75, 1, Col.ORANGE);
+		//Gfx.fillcircle(Gfx.screenwidthmid - 75 , Gfx.screenheight - 75, 1, Col.WHITE);
+		
+		// Background
+		Text.align(Text.LEFT);
+		Text.display(Gfx.screenwidthmid + 50, Gfx.screenheight - 100, '[B]ackground');
+		Text.display(
+			Gfx.screenwidthmid + 50 + Text.width('[') + 2,
+			Gfx.screenheight - 100,
+			'B',
+			color
+		);
+		
+		
 	}
 	
 	

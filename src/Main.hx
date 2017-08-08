@@ -6,7 +6,7 @@ class Main
 {
 	private var GAME_NAME: String = 'DOTGER';
 	private var GAME_BY: String = "A game by Nacho 'bazoo' Verdon";
-	private var TEXT_BLENDING_SPEED: Float = 0.01;
+	private var TEXT_BLENDING_SPEED: Float = 0.015;
 	
 	private var isChangingScene: Bool = false;
 	private var showText: Bool = true;
@@ -19,7 +19,7 @@ class Main
 	
 	public function new() 
 	{
-		//Scene.change(GameScene);
+		//Scene.change(MenuScene);
 		Music.loadsong('music/dotger100bpm');
 		Music.loadsong('music/dotger110bpm');
 		Music.loadsong('music/dotger120bpm');
@@ -27,11 +27,18 @@ class Main
 		Music.loadsong('music/dotger140bpm');
 		Music.loadsound('playerHitDebris', 0.8);
 		Music.loadsound('playerHitPowerUp', 0.4);
-		Core.delaycall(startBlending, 2);
+		Globals.init();
+		Core.delaycall(startBlending, 1.5);
 	}
 	
 	function update() {
-		Globals.changeBackgroundColor();
+		Gfx.clearscreen(
+			Col.hsl(
+				Core.time * Globals.backgroundChangeSpeed,
+				Globals.backgroundSaturation,
+				Globals.backgroundLightness
+			)
+		);
 		if (isBlending) handleColor();
 		updateColor();
 		drawText();
