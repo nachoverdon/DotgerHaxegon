@@ -96,7 +96,7 @@ class GameScene {
 		
 	// Initializes all the necessary variables.
 	function initialize() {
-		_songPlaying = false;
+		_songPlaying = true;
 		_level = 0;
 		updateMusic();
 		//playSong();
@@ -280,7 +280,8 @@ class GameScene {
 		if (!_isPlayerAlive) {
 			if (Input.justpressed(Key.R)) {
 				// Text.display(50, 50, "[R]estarting...");
-				Scene.change(MenuScene);
+				if (Globals._HIGH_SCORE == 0) Scene.change(MenuScene);
+				else Scene.change(Replay);
 			}
 		}
 	}
