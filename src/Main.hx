@@ -20,6 +20,13 @@ class Main
 	public function new() 
 	{
 		//Scene.change(GameScene);
+		Music.loadsong('music/dotger100bpm');
+		Music.loadsong('music/dotger110bpm');
+		Music.loadsong('music/dotger120bpm');
+		Music.loadsong('music/dotger130bpm');
+		Music.loadsong('music/dotger140bpm');
+		Music.loadsound('playerHitDebris', 0.8);
+		Music.loadsound('playerHitPowerUp', 0.4);
 		Core.delaycall(startBlending, 2);
 	}
 	

@@ -5,6 +5,11 @@ import haxegon.*;
 class GameScene {
 	private var DEBUG_MODE: Bool = false;
 	
+	private var _songPlaying: Bool;
+	private var _actualSong: String;
+	private var _VOLUME_DEBRIS: Float = 0.5;
+	private var _VOLUME_POWERUP: Float = 0.4;
+	
 	private var _highScore: Int;
 	private var _score: Int;
 	private var _SCORE_POWERUP: Int = 2;
@@ -91,6 +96,11 @@ class GameScene {
 		
 	// Initializes all the necessary variables.
 	function initialize() {
+		_songPlaying = false;
+		_level = 0;
+		updateMusic();
+		//playSong();
+		Music.playsound('playerHitPowerUp', _VOLUME_POWERUP);
 		_highScore = Globals._HIGH_SCORE;
 		_score = 0;
 		
@@ -121,7 +131,6 @@ class GameScene {
 		Debris._MIN_SPEED = Debris._INITIAL_MIN_SPEED;
 		Debris._MAX_SPEED = Debris._INITIAL_MAX_SPEED;
 		_debrisSpawnCooldown = _DEBRIS_INITIAL_COOLDOWN;
-		_level = 0;
 		_debrisActualAmount = _DEBRIS_AMOUNTS[_level];
 		_nextDebris = 0;
 		
@@ -129,6 +138,31 @@ class GameScene {
 		_spawnedDebrisPool = new Array<Debris>();
 		createDebris();
 		createPowerUps();
+	}
+	
+	function updateMusic() {
+		var delay: Float = 0.1;
+		Music.fadeout();
+		
+		switch _level {			
+			case 0:
+				delay = 0.4;
+				_actualSong = 'dotger100bpm';
+			case 1:
+				_actualSong = 'dotger110bpm';
+			case 2:
+				_actualSong = 'dotger120bpm';
+			case 3:
+				_actualSong = 'dotger130bpm';
+			case 4:
+				_actualSong = 'dotger140bpm';
+		}
+		
+		if (_songPlaying) Core.delaycall(playSong, delay);
+	}
+	
+	function playSong() {
+		Music.playsong('music/' + _actualSong);
 	}
 	
 	function getUIColor(): Int {
@@ -206,6 +240,7 @@ class GameScene {
 	}
 	
 	function gameOver() {
+		Music.fadeout();
 		Text.align(Text.CENTER);
 		Text.size = 4;
 		Text.display(Gfx.screenwidthmid, Gfx.screenheightmid - 80, GAME_OVER);
@@ -228,6 +263,17 @@ class GameScene {
 	// Checks for all the inputs.
 	function checkInputs() {
 		if (_isPlayerAlive) checkPlayerInputs();
+
+		if (Input.justpressed(Key.M)) {
+			if (_songPlaying) {
+				Music.stopsong();
+				_songPlaying = false;
+			}else {
+				playSong();
+				_songPlaying = true;
+			}
+		}
+		
 		
 		// Restarts the game
 		// TODO: R -> RESTART, M -> MENU
@@ -433,6 +479,7 @@ class GameScene {
 			}
 			_score += _SCORE_NEXT_LEVEL * (_level + 1);
 			createDebris();
+			updateMusic();
 		}
 	}
 		
@@ -540,6 +587,7 @@ class GameScene {
 		decreasePlayerSizeBy( -powerUp.getSize());
 		_score += _SCORE_POWERUP;
 		// SOUND: playerPowerUp
+		Music.playsound('playerHitPowerUp', _VOLUME_POWERUP);
 		powerUp.kill();
 		_spawnedPowerUpPool.remove(powerUp);
 	}
@@ -547,6 +595,7 @@ class GameScene {
 	function playerCollidedWithDebris(debris: Debris) {
 		decreasePlayerSizeBy(_DEBRIS_DAMAGE);
 		// SOUND: playerHit
+		Music.playsound('playerHitDebris', _VOLUME_DEBRIS);
 		debris.kill();
 		_spawnedDebrisPool.remove(debris);
 		if (_score > _SCORE_PENALTY_DEBRIS) _score -= _SCORE_PENALTY_DEBRIS;
